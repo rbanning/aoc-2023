@@ -1,4 +1,4 @@
-import { readData } from '../../shared.ts';
+import { readData, outputHeading, outputAnswer } from '../../shared.ts';
 import chalk from 'chalk';
 
 export async function day1a(dataPath?: string) {
@@ -7,4 +7,6 @@ export async function day1a(dataPath?: string) {
 }
 
 const answer = await day1a();
-console.log(chalk.bgGreen('Your Answer:'), chalk.green(answer));
+outputHeading(1, 'a');
+outputAnswer(answer);
+
