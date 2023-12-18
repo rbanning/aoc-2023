@@ -1,5 +1,5 @@
 import { readData, outputHeading, outputAnswer, Verbose } from '../../shared.ts';
-Verbose.setActive(true);
+Verbose.setActive(false);
 const verbose = new Verbose();
 
 class GameCard {
@@ -7,17 +7,11 @@ class GameCard {
   winningNumbers: number[] = [];
   gameNumbers: number[] = [];
   
-  instances: number = 1;
+  points: number = 0;
 
   findWinners() {
     return this.gameNumbers.filter(num => this.winningNumbers.includes(num));
   }
-
-  calcPointsWon() {
-    const winners = this.findWinners();    
-    return winners.length > 0 ? Math.pow(2, winners.length-1) : 0;
-  }
-
 }
 
 function stringNumbersToArray(input: string, delim: string = ' '): number[] {
@@ -50,36 +44,47 @@ function parseGameCard(line: string): GameCard {
   return card;
 }
 
-function addCardInstancesFrom(currIndex: number, stack: GameCard[]) {
-  if (currIndex < 0 || currIndex >= stack.length) { throw new Error(`addCardInstancesFrom - index out of bounds (${currIndex} of ${stack.length})`); }
-  const card = stack[currIndex];
+function exploreCard(cardIndex: number, stack: GameCard[]) {
+  if (cardIndex < 0 || cardIndex >= stack.length) { throw new Error(`exploreCard - index out of bounds (${cardIndex} of ${stack.length})`); }
+  const card = stack[cardIndex];
   const winners = card.findWinners().length;
-  for (let delta = 1; delta <= winners; delta++) {    
-    const i = currIndex + delta;
+
+  if (card.points > 0) {
+    verbose.add(`> cached Card #${card.id} with ${winners} winner(s) and ${card.points} "points"`).display();
+    return card.points;  //no need to proceed?
+  }
+
+  let count = 1;
+  verbose.add(`> exploring Card #${card.id} with ${winners} winner(s)`).display();
+  for (let delta = 1; delta <= winners; delta++) { 
+    const i = cardIndex + delta;
     if (i < stack.length) { 
-      stack[i].instances += 1;  //increment
+      count = count + exploreCard(i, stack);
     } else {
-      throw new Error(`Beyond the bounds: index: ${currIndex}, winners: ${winners}, i: ${i}`);
+      throw new Error(`Beyond the bounds: index: ${cardIndex}, winners: ${winners}, i: ${i}`);
     }
   }
+
+  verbose.add(`  - done with #${card.id}, count: ${count}`).display();
+  card.points = count;
+  return count;
 }
 
 export async function day4b(dataPath?: string) {
   const data = (await readData(dataPath)).filter(Boolean);
   const cards = data.map(line => parseGameCard(line));
 
-  cards.forEach((_, index) => addCardInstancesFrom(index, cards));
+  if (Verbose.isActive()) {
+    console.log(cards.map(c => {
+      return {
+        id: c.id,
+        winners: c.findWinners().length,
+      }
+    }));
+  }
 
-  console.log(cards.map(c => {
-    return {
-      id: c.id,
-      winners: c.findWinners().length,
-      instances: c.instances
-    }
-  }))
-
-  return cards.reduce((sum, card) => {
-    return sum + card.instances;
+  return cards.reduce((sum, card, currentIndex) => {
+    return sum + exploreCard(currentIndex, cards);
   }, 0);
 }
 
