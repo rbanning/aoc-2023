@@ -140,5 +140,5 @@ export async function day5a(dataPath?: string) {
 
 
 const answer = await day5a();
-outputHeading(4, 'b');
+outputHeading(5, 'a');
 outputAnswer(answer);
