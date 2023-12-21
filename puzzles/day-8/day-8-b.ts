@@ -1,4 +1,4 @@
-import { greatestCommonFactor, leastCommonMultiple, primeFactors } from '../../helpers.ts';
+import { greatestCommonFactor, leastCommonMultiple, primeFactors } from '../../helpers/mathHelpers.ts';
 import { readData, outputHeading, outputAnswer, Verbose } from '../../shared.ts';
 Verbose.setActive(true);
 const verbose = new Verbose();
