@@ -24,7 +24,11 @@ export function outputAnswer(answer: unknown) {
 }
 
 
-
+export type VerboseDisplayOptions = {
+  flush?: boolean,
+  bright?: boolean
+}
+const defaultDisplayOptions: VerboseDisplayOptions = { flush: true, bright: false };
 export class Verbose {
   private output: string[] = [];
 
@@ -48,18 +52,24 @@ export class Verbose {
     return this;
   }
 
-  display(flush: boolean = true) {
-    this.output.filter(Boolean)
-      .forEach(line => this.verboseOutput(line));
-    if (flush) {
+  display(options?: VerboseDisplayOptions) {
+    options = { ...defaultDisplayOptions, ...options };
+    this.output
+      .forEach(line => options.bright ? this.verboseOutputBright(line) : this.verboseOutput(line));
+    if (options.flush) {
       this.clear();
     }
     return this;
   }
 
-  verboseOutput(text: string) {
+  private verboseOutput(text: string) {
     if (Verbose.isActive()) {
       console.log(chalk.whiteBright.bold('> '), chalk.gray(text));
+    }
+  }
+  private verboseOutputBright(text: string) {
+    if (Verbose.isActive()) {
+      console.log(chalk.whiteBright.bold('> '), chalk.whiteBright(text));
     }
   }
 

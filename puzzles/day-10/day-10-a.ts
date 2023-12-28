@@ -1,10 +1,19 @@
-import { readData } from '../../shared.ts';
-import chalk from 'chalk';
+import { readData, outputHeading, outputAnswer, Verbose } from '../../shared.ts';
+import { Loop } from './loop.ts';
+import { PipeMap } from './pipe-map.ts';
+import { Tile } from './pipe.ts';
+Verbose.setActive(true);
+const verbose = new Verbose();
 
 export async function day10a(dataPath?: string) {
   const data = await readData(dataPath);
-  return 0;
+  const map = new PipeMap(data.map(row => row.split('').map(col => col as Tile)));
+
+  const loop = Loop.build(map);
+  let total = loop.stepsToFurthestPoint();
+  return total;
 }
 
 const answer = await day10a();
-console.log(chalk.bgGreen('Your Answer:'), chalk.green(answer));
+outputHeading(10, 'a');
+outputAnswer(answer);
