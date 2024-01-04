@@ -39,3 +39,6 @@ testem.log
 Thumbs.db
 
 .nx/cache
+
+# Remove Data Inputs
+*.data.txt
