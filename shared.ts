@@ -11,7 +11,7 @@ export async function readData(path?: string) {
 
 
 
-export function outputHeading(day: number, test: 'a' | 'b') {
+export function outputHeading(day: number, test: 'a' | 'b' | 'x') {
 
   const text = ` 🎄    AOB #${day}-${test}    🎄 `;
   console.log(chalk.red(Array(text.length).fill('-').join('')));

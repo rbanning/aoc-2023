@@ -55,6 +55,7 @@
     "day-13-a:sample": "nx day-13-a --data=sample",
     "day-13-b": "nx day-13-b",
     "day-13-b:sample": "nx day-13-b --data=sample",
+    "day-13-c:sample": "nx day-13-c --data=sample",
     "day-14-a": "nx day-14-a",
     "day-14-a:sample": "nx day-14-a --data=sample",
     "day-14-b": "nx day-14-b",

@@ -1,8 +1,9 @@
 import { Verbose } from "../shared.ts";
+import { arrayHelpers } from "./arrayHelpers.ts";
 
 // *** basic types ***
 export type BinaryCompareFunction<T> = (a: T, b: T) => boolean;
-
+export type Player = 'me' | 'you';
 
 /*** Longest Common Sequence ***
  * 
@@ -90,3 +91,42 @@ export class LIS {
 }
 
 
+/*** Coins Game ***
+ * 
+ *  Two (2) player game where players alternate choosing either the first or last coin in the sequence
+ *    Winner is the one who gets the highest sum of the values of the coins
+ *  Problem = which coin (first or last) to pick to maximize my end value
+ * 
+ *  example:  5 10 100 25
+ *    me: 5, you: 25, me: 100, you: 10
+ *      me: 5 + 100 = 105
+ *      you: 25 + 10 = 35
+ *    
+ */
+export class CoinGame {
+
+
+  public static solveBasic(coins: number[]): number[] {
+    return this.play(coins, 'me');  //I always go first!
+  }
+  private static play(coins: number[], player: Player): number[] {
+    if (coins.length === 0) { return []; }
+
+    let first: number[]; let last: number[];
+
+    if (player === 'me') {
+      first = [arrayHelpers.first(coins), ...this.play(coins.slice(1), 'you')];
+      last = [arrayHelpers.last(coins), ...this.play(coins.slice(0, coins.length-1), 'you')];
+      return this.sum(first) > this.sum(last) ? first : last;   // max
+    } else {
+      player === 'you'
+      first = this.play(coins.slice(1), 'me');
+      last = this.play(coins.slice(0, coins.length-1), 'me');
+      return this.sum(first) < this.sum(last) ? first : last;   // min
+    }
+  }
+
+  private static sum(a: number[]) {
+    return a.reduce((sum, curr) => sum + curr, 0);
+  }
+}

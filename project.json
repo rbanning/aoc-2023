@@ -158,6 +158,12 @@
         "target": "day-13-b"
       }
     },
+    "day-13-c": {
+      "executor": "ts-aoc-starter:puzzle",
+      "options": {
+        "target": "day-13-c"
+      }
+    },
     "day-14-a": {
       "executor": "ts-aoc-starter:puzzle",
       "options": {
