@@ -1,20 +1,9 @@
 import { readData, outputHeading, outputAnswer, Verbose } from '../../shared.ts';
-Verbose.setActive(false);
+import { calcVariants } from './approach-B.ts';
+import { RecordRow, Springs, springChars, SpringChar } from './common.ts';
+Verbose.setActive(true);
 const verbose = new Verbose();
 
-const damagedSpring = '#';
-const operationalSpring = '.';
-const unknownSpring = '?';
-const springChars = [damagedSpring, operationalSpring, unknownSpring] as const;
-type SpringChar = typeof springChars[number];
-type Springs = SpringChar[];
-
-
-type RecordRow = {
-  springs: Springs,
-  recordedGroupings: number[],
-  variants?: Springs[]
-}
 
 
 function parseRow(line: string): RecordRow {
@@ -38,79 +27,16 @@ function parseRow(line: string): RecordRow {
   }
 }
 
-function springsToGroups(springs: Springs): Springs[] {
-  let group: Springs = [];
-  return springs.reduce((result, curr, index) => {
-    //add the group to the result if we find an operational spring 
-    if (curr === operationalSpring) {
-      if (group.length > 0) { result.push(group); }
-      group = [];
-    } else {
-      group.push(curr);
-    }
-    //add the group to the result if we are at the end
-    if (index === (springs.length-1) && group.length > 0) { result.push(group); }
-    return result;
-  }, [] as Springs[]);
-}
-
-function groupToString(group: Springs[]): string {
-  return group.map((springs, index) => `${index}: '${springs.join('')}'`).join(', ');
-}
-
-function recordIsValid(springs: Springs, targetLengths: number[]): boolean {
-  const groups = springsToGroups(springs);
-  let result = false;
-  if (groups.length === targetLengths.length) {
-    result = groups.every((group, index) => {
-      return group.length === targetLengths[index]
-      && group.every(ch => ch === damagedSpring);
-    })
-  } 
-  
-  // verbose.add(`     recordIsValid('${springs.join('')}', [${targetLengths}]) => [${groupToString(groups)}] => ${result}`).display();
-  
-  return result; 
-}
-
-function calcVariants(springs: Springs, targetLengths: number[], index: number): Springs[] {
-  
-  // verbose.add(`   calcVariants(springs: '${springs.join('')}', targets: [${targetLengths}], index: ${index})`).display();
-
-  if (index === springs.length) {
-    //stop --- nothing to check
-    return recordIsValid(springs, targetLengths) ? [springs] : [];
-  }
-
-  const char = springs[index];
-  switch (char) {
-    case operationalSpring:
-      case damagedSpring:
-      //otherwise just ignore the char and continue
-      return calcVariants(springs, targetLengths, index+1);
-
-    case unknownSpring:
-      //try replacing with operational and damaged
-      const a = [...springs]; a[index] = operationalSpring;
-      const b = [...springs]; b[index] = damagedSpring;
-      return [
-        ...calcVariants(a, targetLengths, index+1),
-        ...calcVariants(b, targetLengths, index+1),
-      ];
-    
-    default: 
-      throw new Error(`Found unknown spring char '${char}'`);
-  }
-}
-
-
 export async function day12a(dataPath?: string) {
   const data = await readData(dataPath);
 
   const records: RecordRow[] = data.map(line => parseRow(line));
-  records.forEach((row, index) => {
-    verbose.add(`Row: ${index}: ${row.springs.join('')}  ${row.recordedGroupings.join(', ')}`).display();
-  })
+  if (Verbose.isActive()) {
+    records.forEach((row, index) => {
+      verbose.add(`Row: ${index}: ${row.springs.join('')}  ${row.recordedGroupings.join(', ')}`).display();
+    })
+  }
+
   for (let index = 0; index < records.length; index++) {    
     const record = records[index];
     record.variants = calcVariants(records[index].springs, records[index].recordedGroupings, 0);
