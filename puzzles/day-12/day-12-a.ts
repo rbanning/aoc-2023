@@ -23,7 +23,7 @@ function parseRow(line: string): RecordRow {
   })
   return  {
     springs,
-    recordedGroupings
+    targetLengths: recordedGroupings
   }
 }
 
@@ -33,13 +33,13 @@ export async function day12a(dataPath?: string) {
   const records: RecordRow[] = data.map(line => parseRow(line));
   if (Verbose.isActive()) {
     records.forEach((row, index) => {
-      verbose.add(`Row: ${index}: ${row.springs.join('')}  ${row.recordedGroupings.join(', ')}`).display();
+      verbose.add(`Row: ${index}: ${row.springs.join('')}  ${row.targetLengths.join(', ')}`).display();
     })
   }
 
   for (let index = 0; index < records.length; index++) {    
     const record = records[index];
-    record.variants = calcVariants(records[index].springs, records[index].recordedGroupings, 0);
+    record.variants = calcVariants(records[index].springs, records[index].targetLengths, 0);
     if (Verbose.isActive()) {
       verbose.add(`Found ${record.variants.length} for row #${index}`).display();
       record.variants.forEach((v, index) => {

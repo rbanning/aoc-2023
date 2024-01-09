@@ -2,10 +2,11 @@ import { isNullable } from '../../helpers/nullable.type.ts';
 import { readData, outputHeading, outputAnswer, Verbose } from '../../shared.ts';
 import { calcVariants } from './approach-B.ts';
 import { RecordRow, SpringChar, Springs, damagedSpring, operationalSpring, springChars, unknownSpring } from './common.ts';
-Verbose.setActive(true);
+import { findCombinations } from './part-b.ts';
+Verbose.setActive(false);
 const verbose = new Verbose();
 
-const foldFactor = 1;
+const foldFactor = 5;
 
 function parseRow(line: string): RecordRow {
   const parts = line.split(' ').map(m => m.trim());
@@ -26,7 +27,7 @@ function parseRow(line: string): RecordRow {
 
   return  {
     springs: unfold(springs, foldFactor, '?'),
-    recordedGroupings: unfold(recordedGroupings, foldFactor)
+    targetLengths: unfold(recordedGroupings, foldFactor)
   }
 }
 
@@ -51,18 +52,14 @@ export async function day12b(dataPath?: string) {
   const records: RecordRow[] = data.map(line => parseRow(line));
   for (let index = 0; index < records.length; index++) {    
     const record = records[index];
-    verbose.add(`Variants: Row ${index}...`).display();
-    record.variants = calcVariants(records[index].springs, records[index].recordedGroupings, 0);
+    record.variantCount = findCombinations(record.springs.join(''), record.targetLengths); // calcVariants(record.springs, record.targetLengths);
     if (Verbose.isActive()) {
-      verbose.add(`Row: ${index}: (${record.variants.length} variants) ${record.springs.join('')}  ${record.recordedGroupings.join(', ')}`).display();
-      // record.variants.forEach((v, index) => {
-      //   verbose.add(`   ${index}) '${v.join('')}'`).display();
-      // });
+      verbose.add(`Row ${index}... ${record.springs.join('')} - ${record.targetLengths.join(',')} ==> ${record.variantCount}`).display();
     }
   }
 
   const total = records.reduce((sum, record) => {
-    return sum + (isNullable(record.variants) ? 0 : record.variants.length);
+    return sum + record.variantCount;
   }, 0);
   return total;
 }

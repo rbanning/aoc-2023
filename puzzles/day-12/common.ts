@@ -7,33 +7,47 @@ export type Springs = SpringChar[];
 
 export type RecordRow = {
   springs: Springs,
-  recordedGroupings: number[],
-  variants?: Springs[];
+  targetLengths: number[],
+  //some approaches find the actual variants while others only count the number of variants
+  variants?: Springs[],
+  variantCount?: number,
 }
 
+export type SpringGroup = {
+  springs: Springs,
+  startIndex: number,
+  variants?: Springs[]
+}
+const initSpringGroup = () => {
+  return { springs: [], startIndex: -1 };
+};
 
-export function springsToGroups(springs: Springs): Springs[] {
-  let group: Springs = [];
+export function springsToGroups(springs: Springs): SpringGroup[] {
+  let group: SpringGroup = initSpringGroup();
   return springs.reduce((result, curr, index) => {
     //add the group to the result if we find an operational spring 
     if (curr === operationalSpring) {
-      if (group.length > 0) { 
+      if (group.springs.length > 0) { 
         result.push(group); 
-        group = []; 
+        group = initSpringGroup(); 
      }
     } else {
-      group.push(curr);
+      if (group.springs.length === 0) { group.startIndex = index; }
+      group.springs.push(curr);
     }
     //add the group to the result if we are at the end
-    if (index === (springs.length-1) && group.length > 0) { result.push(group); }
+    if (index === (springs.length-1) && group.springs.length > 0) { result.push(group); }
     return result;
-  }, [] as Springs[]);
+  }, [] as SpringGroup[]);
 }
 
-export function groupsToSprings(groups: Springs[]): Springs {
-  return groups.map((g, index) => {
-    return (index > 0) ? [operationalSpring, ...g] : g;
-  }).flat() as Springs;
+export function groupsToSprings(groups: SpringGroup[]): Springs {
+  return groups.reduce((ret, curr) => {
+    //pad with operational springs
+    while (ret.length < curr.startIndex) { ret.push(operationalSpring); }
+    ret = [...ret, ...curr.springs];
+    return ret;
+  }, [] as Springs);
 }
 
 export function recordIsValid(springs: Springs, targetLengths: number[]): boolean {
@@ -41,8 +55,8 @@ export function recordIsValid(springs: Springs, targetLengths: number[]): boolea
   let result = false;
   if (groups.length === targetLengths.length) {
     result = groups.every((group, index) => {
-      return group.length === targetLengths[index]
-      && group.every(ch => ch === damagedSpring);
+      return group.springs.length === targetLengths[index]
+      && group.springs.every(ch => ch === damagedSpring);
     })
   }   
   return result; 
