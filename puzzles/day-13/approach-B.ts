@@ -1,27 +1,18 @@
 import { Nullable } from "../../helpers/nullable.type.ts";
 import { Verbose } from "../../shared.ts";
-import { MirrorPattern, Grid, ReflectionIndices, PatternChar, ASH, ROCK } from "./common.ts";
+import { MirrorPattern, Grid, ReflectionIndices, deltaInCols, deltaInRows } from "./common.ts";
 
-type Smudge = {
-  row: number,
-  col: number
-};
 
-function fixSmudge(char: PatternChar): PatternChar {
-  return char === ASH ? ROCK : ASH;
-}
-
-type ReflectionMeta = {
+type FailedReflection = {
   indices: ReflectionIndices,
-  invalidCount: number
+  count: number
 }  
 
-const INVALID_THRESHOLD = 3;
 const TARGET_DIFFERENCES = 1;
 
-function displayReflectionMeta(meta: ReflectionMeta) {
-  const [a,b] = meta.indices;
-  new Verbose().add(`meta: (${a},${b}) = ${meta.invalidCount}`).display();
+function displayFailedReflection(failed: FailedReflection) {
+  const [a,b] = failed.indices;
+  new Verbose().add(`failed reflection: (${a},${b}) = ${failed.count}`).display();
 }
 
 // returns the a/b columns where reflection occurs if there is vertical reflection 
@@ -34,26 +25,22 @@ function checkVertical(grid: Grid): Nullable<ReflectionIndices> {
   let b = a + 1;
   let ret: Nullable<ReflectionIndices>  = null;
 
-  const differences: ReflectionMeta[] = [];
+  const differences: FailedReflection[] = [];
 
-  while (a < width && b < width && !ret) {
-    let ok = true;  
-    const meta: ReflectionMeta = { indices: [a,b], invalidCount: 0 };
-    differences.push(meta);
+  while (b < width && !ret) {
+    const diff: FailedReflection = { 
+      indices: [a,b], 
+      count: 0
+    };
+    differences.push(diff);
 
-    for (let row = 0; row < grid.length && ok; row++) {
-      let left = a; let right = b;
-      while (ok && left >= 0 && right < width) {
-        if (grid[row][left] === grid[row][right]) {
-          left += -1; right += 1;
-        } else {
-          meta.invalidCount += 1;
-          ok = meta.invalidCount < INVALID_THRESHOLD;
-        }
-      }
-    }    
+    let currA = a; let currB = b;
+    while (currA >= 0 && currB < width && diff.count <= TARGET_DIFFERENCES) {
+      diff.count += deltaInCols(grid, currA, currB, TARGET_DIFFERENCES);
+      currA += -1; currB += 1; //move apart
+    }
 
-if (ok && meta.invalidCount === TARGET_DIFFERENCES) {
+    if (diff.count === TARGET_DIFFERENCES) {
       ret = [a,b];
     } else {
       a += 1;
@@ -63,8 +50,7 @@ if (ok && meta.invalidCount === TARGET_DIFFERENCES) {
 
   if (Verbose.isActive()) {
     new Verbose().add(`VERTICAL: ${differences.length} checks`).display();
-    differences.forEach(meta => displayReflectionMeta(meta));
-    new Verbose().newline().display();
+    differences.forEach(meta => displayFailedReflection(meta));
   }
 
   return ret;
@@ -80,26 +66,22 @@ function checkHorizontal(grid: Grid): Nullable<ReflectionIndices> {
   let b = a + 1;
   let ret: Nullable<ReflectionIndices>  = null;
 
-  const differences: ReflectionMeta[] = [];
+  const differences: FailedReflection[] = [];
 
-  while (a < height && b < height && !ret) {
-    let ok = true; 
-    const meta: ReflectionMeta = { indices: [a,b], invalidCount: 0 };
-    differences.push(meta);
- 
-    for (let col = 0; col < grid.length && ok; col++) {
-      ok = grid[a][col] === grid[b][col];  
-      let top = a; let bottom = b;
-      while (ok && top >= 0 && bottom < height) {
-        if (grid[top][col] === grid[bottom][col]) {
-          top += -1; bottom += 1;
-        } else {
-          meta.invalidCount += 1;
-          ok = meta.invalidCount < INVALID_THRESHOLD;
-        }
-      }
-    }    
-    if (ok && meta.invalidCount === TARGET_DIFFERENCES) {
+  while (b < height && !ret) {
+    const diff: FailedReflection = { 
+      indices: [a,b], 
+      count: 0
+    };
+    differences.push(diff);
+
+    let currA = a; let currB = b;
+    while (currA >= 0 && currB < height && diff.count <= TARGET_DIFFERENCES) {
+      diff.count += deltaInRows(grid, currA, currB, TARGET_DIFFERENCES);
+      currA += -1; currB += 1; //move apart
+    }
+
+    if (diff.count === TARGET_DIFFERENCES) {
       ret = [a,b];
     } else {
       a += 1;
@@ -109,8 +91,7 @@ function checkHorizontal(grid: Grid): Nullable<ReflectionIndices> {
 
   if (Verbose.isActive()) {
     new Verbose().add(`HORIZONTAL: ${differences.length} checks`).display();
-    differences.forEach(meta => displayReflectionMeta(meta));
-    new Verbose().newline().display();
+    differences.forEach(meta => displayFailedReflection(meta));
   }
 
   return ret;

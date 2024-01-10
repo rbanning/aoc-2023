@@ -1,8 +1,8 @@
 import { Nullable, isNullable } from '../../helpers/nullable.type.ts';
 import { readData, outputHeading, outputAnswer, Verbose } from '../../shared.ts';
 import { analyzePattern } from './approach-B.ts';
-import { Grid, MirrorPattern, PatternChar, ReflectionIndices, ReflectionType } from './common.ts';
-Verbose.setActive(true);
+import { Grid, MirrorPattern, PatternChar, ReflectionIndices, ReflectionType, displayGrid } from './common.ts';
+Verbose.setActive(false);
 const verbose = new Verbose();
 
 function parseData(data: string[]): Grid[] {
@@ -43,10 +43,14 @@ export async function day13b(dataPath?: string) {
   let total = 0;
 
   grids.forEach((grid, index) => {
+    displayGrid(grid);
     const { type, indices } = analyzePattern(grid) ?? {};
-    results.push({grid, type, indices});
-    total += patternValue(type, indices);
-    verbose.add(`${index}: type: ${type ?? '??'}, indices: [${(indices ?? []).join(',')}], total: ${total}`).display();
+    if (type) {
+      results.push({grid, type, indices});
+      total += patternValue(type, indices);
+    }
+    verbose.add(`${index}: type: ${type ?? '??'}, indices: [${(indices ?? []).join(',')}]`).display();
+    verbose.newline().display();
   });
 
 
