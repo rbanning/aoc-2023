@@ -1,5 +1,5 @@
 import { Verbose } from "../../shared.ts";
-import { Grid, GridCoordMeta, GridMeta, cloneGrid, moveRoundRock, roundRock } from "./common.ts";
+import { Grid, GridCoordMeta, cloneGrid, moveRoundRock, roundRock } from "./common.ts";
 import { Direction, isReverseDirection, isVerticalDirection } from "./direction.ts";
 
 export function tiltGrid(grid: Grid, direction: Direction) {

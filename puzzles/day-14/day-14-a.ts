@@ -3,7 +3,7 @@ import { tiltGrid } from './approach-A.ts';
 import { CharRow, Grid, arrayValue, displayGrid } from './common.ts';
 import { east, north, south, west } from './direction.ts';
 
-Verbose.setActive(false);
+Verbose.setActive(true);
 const verbose = new Verbose();
 
 function parseData(data: string[]): Grid {

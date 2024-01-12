@@ -1,6 +1,6 @@
 import { readData, outputHeading, outputAnswer, Verbose } from '../../shared.ts';
-import { tiltGrid } from './approach-A.ts';
-import { CharRow, Grid, arrayValue, displayGrid } from './common.ts';
+import { transposeGrid, tiltGrid, moveRocksToFront, test } from './approach-B.ts';
+import { CharRow, Grid, arrayValue, displayGrid, emptySpace, roundRock } from './common.ts';
 import { Direction, east, north, south, west } from './direction.ts';
 
 Verbose.setActive(true);
@@ -25,32 +25,37 @@ export async function day14b(dataPath?: string) {
   const original = parseData(data);
   verbose.add(`Original Grid`).display();
   displayGrid(original);
-
-  const CYCLES = 3;
+  
+  const CYCLES = 1;
 
   let tilted: Grid = original;
   const spinCycle: Direction[] = [north, west, south, east];
   
-  for (let cycle = 0; cycle < CYCLES; cycle++) {
-    verbose.newline().add(`----- CYCLE #(${cycle + 1}) ---`).display().newline();
-    
-    spinCycle.forEach(direction => {
-      verbose.newline().display();
-    
-      tilted = tiltGrid(tilted, direction);
-      displayGrid(tilted, direction);
-      verbose.newline().display();
-    })
-
-    verbose.newline().add(`----- END CYCLE #(${cycle + 1}) ---`).display().newline();
-
+  for (let cycle = 1; cycle <= CYCLES; cycle++) {
+    tilted = performCycle(tilted);
   }
-  
+    verbose.newline().add('Restored Grid').display();
+    tilted = transposeGrid(tilted);
+    displayGrid(tilted, north);
+
   let total = 0;
 
-  total = tilted.reduce((sum, row, index) => sum + arrayValue(row, index, tilted.length, spinCycle.at(-1)), 0);
+  total = tilted.reduce((sum, row, index) => sum + arrayValue(row, index, tilted.length, north), 0);
 
   return total;
+}
+
+function performCycle(tilted: Grid, COUNT: number = 4) {
+  
+  for (let i = 1; i <= COUNT; i++) {
+    verbose.add(`----- CYCLE #(${i}) ---`).display();
+    
+    verbose.add('Tilted & Transposed Grid').display();
+    tilted = tiltGrid(transposeGrid(tilted)); 
+    displayGrid(tilted);
+  }
+
+  return tilted;
 }
 
 const answer = await day14b();
