@@ -2,7 +2,17 @@ import { Nullable } from "./nullable.type.ts";
 
 export type ObjectToString = (obj: unknown) => string;
 
-export class Store<T> {
+export interface IStore<T> {
+  length: number;
+  get(...params: unknown[]): Nullable<T>;
+  add(value: T, ...params: unknown[]): boolean;
+  hasKey(...params: unknown[]): boolean;
+  key(...params: unknown[]): string;
+  keys(): string[];
+  clear(): void;
+}
+
+export class Store<T> implements IStore<T> {
   private _store: {[key: string]: T} = {};
   private _keyFns: ObjectToString[];
 
@@ -50,3 +60,4 @@ export class Store<T> {
   }
 
 }
+
