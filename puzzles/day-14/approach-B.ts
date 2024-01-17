@@ -1,7 +1,6 @@
-import { Verbose } from "../../shared.ts";
-import { CharRow, Grid, GridCoordMeta, GridMeta, cloneGrid, emptySpace, moveRoundRock, roundRock, squareRock } from "./common.ts";
+import { CharRow, Grid, emptySpace, roundRock, squareRock } from "./common.ts";
 import { Day14Cache } from "./day-14-cache.ts";
-import { Direction, east, isReverseDirection, isVerticalDirection, north, south, west } from "./direction.ts";
+import { Direction, east, north, south, west } from "./direction.ts";
 
 /** APPROACH B **
 *
@@ -12,27 +11,6 @@ import { Direction, east, isReverseDirection, isVerticalDirection, north, south,
 *
 */
 
-export type TransformCache = {[key: string]: CharRow};
-
-
-
-
-
-
-export function transposeGrid(grid: Grid): Grid {
-  
-  const result: Grid = Array(grid[0].length)
-    .fill([] as CharRow)
-    .map(_ => Array(grid.length).fill(emptySpace));
-
-  //first col becomes first row   
-  for (let row = 0; row < grid.length; row++) {
-    for (let col = 0; col < grid[0].length; col++)
-    result[col][row] = grid[row][col];
-  }
-
-  return result;
-}
 
 export function tiltGrid(grid: Grid, direction: Direction, cache: Day14Cache) {
 
@@ -51,16 +29,14 @@ export function tiltGrid(grid: Grid, direction: Direction, cache: Day14Cache) {
 }
 
 
-export function moveRocksInRow(row: CharRow, toFront: boolean, cache: Day14Cache) {
+function moveRocksInRow(row: CharRow, toFront: boolean, cache: Day14Cache) {
   
   //only want to proceed if there are any round rocks in the row
   if (row.some(ch => ch === roundRock)) {
     
     //check grid
     if (cache.hasKey(row, toFront)) {
-      const result = cache.get(row, toFront);
-      new Verbose().add(` using cache[${row.join('')},${toFront}] = ${result.join('')}`).display();
-      return result;
+      return cache.get(row, toFront);
     }
 
 
@@ -82,7 +58,7 @@ export function moveRocksInRow(row: CharRow, toFront: boolean, cache: Day14Cache
 
     //save
     if (!toFront) { working = working.reverse(); }
-    cache.add(working, row, toFront); //cache result
+    //debug: removing cache from moveRocksInRow... cache.add(working, row, toFront); //cache result
     return working;
   }
 
