@@ -1,5 +1,6 @@
 import { Coordinate, coordInRange, coordsEqual } from "../../helpers/coordinate.ts";
 import { Nullable } from "../../helpers/nullable.type.ts";
+import { Verbose } from "../../shared.ts";
 
 export class RoutePoint {
   coord: Coordinate;
@@ -57,6 +58,9 @@ export function searchGrid(coord: Coordinate, grid: Grid) {
 export function searchGridRoute(coord: Coordinate, gridRoute: GridRoute) { 
   return gridRoute.find(p => coordsEqual(p.coord, coord));
 }
+export function isInGridRoute(coord: Coordinate, gridRoute: GridRoute) {
+  return gridRoute.some(p => coordsEqual(coord, p.coord));
+}
 export function removeFromGridRoute(coord: Coordinate, gridRoute: GridRoute) {
   const index = gridRoute.findIndex(p => coordsEqual(coord, p.coord));
   if (index >= 0) {
@@ -79,6 +83,57 @@ export function findLowestTotalCost(route: GridRoute) {
   return route[lowestIndex];
 }
 
+export function calcTotalCost(route: GridRoute) {
+  return route.reduce((sum, p) => sum + p.heatLoss, 0);
+}
+
+export function displayGrid(grid: Grid, route?: GridRoute) {
+  const leftPad = 6;  
+  const lineOf = (char: string, length: number) => {
+    return new Array(length)
+      .fill(char)
+      .join('');
+  }
+
+  if (Verbose.isActive()) {
+    const verbose = new Verbose();
+    //col indices
+    verbose.add(lineOf(' ', leftPad));
+    for (let i = 0; i < grid[0].length; i++) {
+      verbose.add(`${i}`);
+    }
+    verbose.display();
+
+    //break (dots)
+    verbose.add('.'.padStart(leftPad+grid[0].length, '.')).display();
+    
+
+    for (let row = 0; row < grid.length; row++) {
+      verbose.add(`${row} | `.padStart(leftPad));
+      for (let col = 0; col < grid[row].length; col++) {
+        if (route && isInGridRoute([row,col], route)) {
+          verbose.add(`#`);
+        } else {
+          verbose.add(`${grid[row][col].heatLoss}`);
+        }
+      }
+      verbose.display();
+    }
+  }
+}
+
+export function displayGridRoute(route: GridRoute) {
+  if (Verbose.isActive()) {
+    const verbose = new Verbose();
+    route.forEach((p, index) => {
+      if (index > 0) {
+        verbose.add(' --> ');
+      }
+      verbose.add(`[${p.row},${p.col}](${p.heatLoss})`);
+    });
+    verbose.display();
+  }
+}
 //#region --- HELPERS ----
 
 
@@ -104,36 +159,42 @@ function moveOptions (grid: Grid, from: Coordinate, alreadyVisited: GridRoute, c
     [row+1, col] as Coordinate,
     [row-1, col] as Coordinate
   ].filter(([r,c]) => {
-    return coordInRange([r,c], grid.length, grid[r].length)
-      && !alreadyVisited.some(r => coordsEqual(from, r.coord));
+    return coordInRange([r,c], grid.length, grid[0].length)
+      && !isInGridRoute([r,c], alreadyVisited);
   });
 
   return moveOptionsFilterByRoute(options, currentRoute, maxInDirection);
 }
 
 function moveOptionsFilterByRoute(options: Coordinate[], route: GridRoute, maxInDirection) {
-  const last = options.slice(-1*maxInDirection);  //get the last three route points
+  const endGroup = route.slice(-1*maxInDirection);  //get the last three route points
 
   //no need to check if we have not gone maxInDirection (three) steps
-  if (last.length < maxInDirection) { return options; }
+  if (endGroup.length < maxInDirection) { return options; }
 
-  const first = last[0]; //first in the list
-  const checkRows = last.every(c => c[0] === first[0]); //every row is equal
-  const checkCols = !checkRows && last.every(c => c[1] === first[1]); //every col is equal (shortcut if we need to check rows)
+  const rows = endGroup.map(p => p.row);
+  const cols = endGroup.map(p => p.col);
 
+  const checkRows = rows.every(r => r === rows[0]); //every row is equal
+  const checkCols = cols.every(c => c === cols[0]); //every col is equal 
+  
+  
   //no need to check if we have not been traveling in a straight line for maxInDirection steps 
   if (!checkRows && !checkCols) { return options; }
-
+  
   //else
-  return options.filter(c => {
+  const result = options.filter(c => {
     if (checkRows) {
-      return c[0] !== first[0];
+      return c[0] !== rows[0];
     } else if (checkCols) {
-      return c[1] !== first[1];
+      return c[1] !== cols[0];
     }
     //else
     return true;
-  })
+  });
+  
+  new Verbose().add(`filtering (${options.length}) options (${options.map(o => `[${o[0]},${o[1]}]`).join(' ')}) to (${result.length})  (${result.map(o => `[${o[0]},${o[1]}]`).join(' ')})  ... (${endGroup.map(p => `[${p.row},${p.col}]`).join(' ')}) rows: ${checkRows}, cols: ${checkCols}`).display();
+  return result;
 }
 
 //#endregion (helpers)

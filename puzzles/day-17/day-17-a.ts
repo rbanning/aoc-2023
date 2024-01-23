@@ -1,6 +1,7 @@
 import { Coordinate } from '../../helpers/coordinate.ts';
 import { readData, outputHeading, outputAnswer, Verbose } from '../../shared.ts';
 import { buildGrid, findShortestRoute } from './approachA.ts';
+import { calcTotalCost, displayGrid, displayGridRoute } from './common.ts';
 
 Verbose.setActive(true);
 const verbose = new Verbose();
@@ -13,23 +14,25 @@ export async function day17a(dataPath?: string) {
   const data = await readData(dataPath);
   const grid = buildGrid(parseData(data));
   
+  displayGrid(grid);
+  verbose.newline().display();
+
   const start: Coordinate = [0,0];
   const end: Coordinate = [grid.length-1, grid[0].length-1];
 
   //start the traversing top/left moving right
   const path = findShortestRoute(grid, start, end);
+  const total = calcTotalCost(path);
 
-  if (Verbose.isActive()) {
-    path.forEach((p, index) => {
-      if (index > 0) {
-        verbose.add(' --> ');
-      }
-      verbose.add(`[${p.row,p.col}](${p.heatLoss})`);
-    });
-    verbose.display();
-  }
+  verbose.add(`Nodes visited: ${path.length}`).display();
+  verbose.add(`Total Cost of last in route: ${path[path.length-1].costFromStart}`).display();
+  verbose.add(`Total Cost calculated from route: ${total}`).display();
+  displayGridRoute(path);
 
-  return 0;
+  verbose.newline().display();
+  displayGrid(grid, path);
+
+  return total;
 }
 
 const answer = await day17a();

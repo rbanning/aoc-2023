@@ -1,5 +1,6 @@
 import { Coordinate, coordsEqual } from "../../helpers/coordinate.ts";
-import { Grid, GridRoute, RoutePoint, findLowestTotalCost, removeFromGridRoute, searchGrid, searchGridRoute } from "./common.ts";
+import { Verbose } from "../../shared.ts";
+import { Grid, GridRoute, RoutePoint, findLowestTotalCost, isInGridRoute, removeFromGridRoute, searchGrid, searchGridRoute } from "./common.ts";
 
 export const buildGrid = (input: string[][]): Grid => {
   return input.map((line, r) => {
@@ -13,7 +14,6 @@ export const buildGrid = (input: string[][]): Grid => {
 export const findShortestRoute = (grid: Grid, start: Coordinate, end: Coordinate): GridRoute => {
   const openSet: GridRoute = [];
   const closedSet: GridRoute = [];
-  const route: GridRoute = [];
 
   const startPoint = searchGrid(start, grid);
 
@@ -34,17 +34,18 @@ export const findShortestRoute = (grid: Grid, start: Coordinate, end: Coordinate
 
     //find the "best" next move option
     const options = currentPoint.options(grid, closedSet);
+
     for (let i = 0; i < options.length; i++) {
       const neighbor = searchGrid(options[i], grid);
 
       //only proceed if neighbor is NOT in the closed list
-      if (!closedSet.find(p => coordsEqual(neighbor.coord, p.coord))) {
+      if (!isInGridRoute(neighbor.coord, closedSet)) {
 
-
+        
         let gScore = currentPoint.costFromStart + 1;
         let gScoreIsBest = false;
-
-        if (!searchGridRoute(neighbor.coord, openSet)) {
+        
+        if (!isInGridRoute(neighbor.coord, openSet)) {
           // first time at this node
           gScoreIsBest = true;
           openSet.push(neighbor);
