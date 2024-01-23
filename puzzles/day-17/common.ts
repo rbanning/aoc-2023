@@ -94,6 +94,18 @@ export function displayGrid(grid: Grid, route?: GridRoute) {
       .fill(char)
       .join('');
   }
+  const direction = (a: Coordinate, b: Coordinate) => {
+    if (a && b) {
+      if (a[0] !== b[0]) {
+        return a[0] > b[0] ? '^' : 'V';
+      } else if (a[1] != b[1]) {
+        return a[1] > b[1] ? '<' : '>';
+      }
+    }
+
+    //else
+    return null;
+  }
 
   if (Verbose.isActive()) {
     const verbose = new Verbose();
@@ -111,10 +123,11 @@ export function displayGrid(grid: Grid, route?: GridRoute) {
     for (let row = 0; row < grid.length; row++) {
       verbose.add(`${row} | `.padStart(leftPad));
       for (let col = 0; col < grid[row].length; col++) {
-        if (route && isInGridRoute([row,col], route)) {
-          verbose.add(`#`);
+        const cell = grid[row][col];
+        if (route && isInGridRoute(cell.coord, route)) {
+          verbose.add(direction(cell.parent?.coord, cell.coord) ?? `#`);
         } else {
-          verbose.add(`${grid[row][col].heatLoss}`);
+          verbose.add(`${cell.heatLoss}`);
         }
       }
       verbose.display();
